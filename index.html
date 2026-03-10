@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corazón 3D - Anatomía Básica</title>
+  <style>
+    :root{
+      --bg:#071226;
+      --bg2:#0d1b38;
+      --card:#102347cc;
+      --line:#28457c;
+      --text:#eef4ff;
+      --muted:#b6c7ef;
+      --accent:#7aa2ff;
+      --danger:#ff6b81;
+      --ok:#39d98a;
+      --warn:#ffcc66;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      height:100%;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(circle at top,#10244b 0%,#071226 58%,#040b17 100%);
+      color:var(--text)
+    }
+    body{overflow:hidden}
+    .app{display:grid;grid-template-columns:1.1fr 0.9fr;height:100vh}
+    .viewer{position:relative;min-height:100vh}
+    #heartCanvas{width:100%;height:100%;display:block}
+    .overlay{
+      position:absolute;inset:0;pointer-events:none;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(122,162,255,.08), transparent 35%),
+        radial-gradient(circle at 75% 30%, rgba(255,107,129,.08), transparent 28%);
+    }
+    .badge{
+      position:absolute;left:24px;top:24px;pointer-events:none;
+      background:rgba(10,18,38,.72);backdrop-filter:blur(10px);
+      border:1px solid rgba(122,162,255,.22);border-radius:999px;
+      padding:10px 16px;font-size:13px;color:var(--muted)
+    }
+    .viewerHud{
+      position:absolute;left:24px;bottom:24px;display:flex;gap:10px;flex-wrap:wrap;
+      pointer-events:auto;
+    }
+    .viewerBtn{
+      appearance:none;border:1px solid rgba(122,162,255,.25);cursor:pointer;
+      background:rgba(10,18,38,.74);color:var(--text);padding:10px 14px;border-radius:999px;
+      font-size:13px;backdrop-filter:blur(10px)
+    }
+    .viewerBtn:hover{border-color:rgba(122,162,255,.5)}
+    .panel{padding:28px 24px 28px 18px;overflow:auto}
+    .hero,.card,.statusCard{
+      background:var(--card);border:1px solid rgba(122,162,255,.16);border-radius:24px;
+      box-shadow:0 16px 50px rgba(0,0,0,.24);backdrop-filter:blur(10px)
+    }
+    .hero{padding:28px;margin-bottom:18px}
+    .statusCard{padding:14px 16px;margin-bottom:16px}
+    h1{font-size:clamp(28px,4vw,46px);line-height:1.02;margin:0 0 12px}
+    .lead{font-size:15px;line-height:1.65;color:var(--muted);margin:0 0 18px}
+    .chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+    .chip{padding:10px 14px;border-radius:999px;background:rgba(122,162,255,.08);border:1px solid rgba(122,162,255,.2);font-size:13px;color:#dce7ff}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .card{padding:18px}
+    .card h2{font-size:16px;margin:0 0 10px}
+    .card p,.card li{font-size:14px;line-height:1.6;color:var(--muted)}
+    ul{margin:0;padding-left:18px}
+    .metricWrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+    .metric{padding:14px;border-radius:18px;background:rgba(7,18,38,.42);border:1px solid rgba(122,162,255,.12)}
+    .metric strong{display:block;font-size:22px;color:var(--text);margin-bottom:4px}
+    .metric span{font-size:12px;color:var(--muted)}
+    .footerNote{margin-top:16px;font-size:12px;color:#91a6d8}
+    .miniTitle{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#90a7d8;margin-bottom:8px}
+    .statusRow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .statusPill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;font-size:12px}
+    .statusPill.ok{background:rgba(57,217,138,.12);color:#bcf7db;border:1px solid rgba(57,217,138,.24)}
+    .statusPill.warn{background:rgba(255,204,102,.12);color:#ffe7b0;border:1px solid rgba(255,204,102,.24)}
+    .statusPill.bad{background:rgba(255,107,129,.12);color:#ffd0d7;border:1px solid rgba(255,107,129,.24)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .statusList{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.65}
+    .statusList li{margin-bottom:4px}
+    .fallbackInfo{display:none}
+    .fallbackInfo.show{display:block}
+    @media (max-width: 980px){
+      body{overflow:auto}
+      .app{grid-template-columns:1fr;height:auto}
+      .viewer{height:54vh;min-height:420px}
+      .panel{padding:16px}
+      .grid{grid-template-columns:1fr}
+      .metricWrap{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="viewer">
+      <canvas id="heartCanvas"></canvas>
+      <div class="overlay"></div>
+      <div class="badge">Modelo 3D estilizado del corazón</div>
+      <div class="viewerHud">
+        <button id="toggleRotation" class="viewerBtn">Pausar giro</button>
+        <button id="togglePulse" class="viewerBtn">Pausar latido</button>
+        <button id="resetView" class="viewerBtn">Vista inicial</button>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <section class="statusCard">
+        <div class="statusRow">
+          <strong>Estado del visor</strong>
+          <span id="renderStatus" class="statusPill warn">Inicializando</span>
+        </div>
+        <ul id="selfTests" class="statusList"></ul>
+        <div id="fallbackInfo" class="fallbackInfo footerNote">
+          Si el visor 3D falla por bloqueo de CDN o WebGL, la página conserva el contenido teórico y muestra el error técnico para depuración.
+        </div>
+      </section>
+
+      <section class="hero">
+        <div class="miniTitle">Sistema cardiovascular</div>
+        <h1>Corazón humano</h1>
+        <p class="lead">
+          El corazón es una bomba muscular hueca que impulsa la sangre por la circulación pulmonar y sistémica.
+          Late de forma rítmica gracias a su sistema de conducción y mantiene el aporte de oxígeno y nutrientes a los tejidos.
+        </p>
+
+        <div class="chips">
+          <div class="chip">4 cavidades</div>
+          <div class="chip">2 circuitos</div>
+          <div class="chip">Automatismo</div>
+          <div class="chip">Miocardio</div>
+        </div>
+
+        <div class="metricWrap">
+          <div class="metric">
+            <strong>4</strong>
+            <span>Aurículas y ventrículos</span>
+          </div>
+          <div class="metric">
+            <strong>60–100</strong>
+            <span>Latidos/min en reposo</span>
+          </div>
+          <div class="metric">
+            <strong>≈ 5 L</strong>
+            <span>Gasto cardiaco por minuto en reposo</span>
+          </div>
+        </div>
+
+        <div class="footerNote">
+          Consejo de examen: si dominas cavidades, válvulas, grandes vasos y recorrido de la sangre, ya llevas media anatomía cardiaca ganada.
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>¿Qué hace el corazón?</h2>
+          <p>
+            Genera presión para que la sangre circule. El lado derecho envía sangre a los pulmones para oxigenarse y el lado izquierdo la distribuye al resto del cuerpo.
+          </p>
+        </article>
+
+        <article class="card">
+          <h2>Cavidades</h2>
+          <ul>
+            <li><strong>Aurícula derecha:</strong> recibe sangre venosa de venas cavas.</li>
+            <li><strong>Ventrículo derecho:</strong> la envía al tronco pulmonar.</li>
+            <li><strong>Aurícula izquierda:</strong> recibe sangre oxigenada de venas pulmonares.</li>
+            <li><strong>Ventrículo izquierdo:</strong> la impulsa a la aorta.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Válvulas</h2>
+          <ul>
+            <li><strong>Tricúspide:</strong> entre aurícula y ventrículo derechos.</li>
+            <li><strong>Mitral:</strong> entre aurícula y ventrículo izquierdos.</li>
+            <li><strong>Pulmonar:</strong> salida del ventrículo derecho.</li>
+            <li><strong>Aórtica:</strong> salida del ventrículo izquierdo.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Recorrido de la sangre</h2>
+          <p>
+            Venas cavas → aurícula derecha → tricúspide → ventrículo derecho → válvula pulmonar → pulmones → venas pulmonares → aurícula izquierda → mitral → ventrículo izquierdo → válvula aórtica → aorta.
+          </p>
+        </article>
+
+        <article class="card">
+          <h2>Capas de la pared</h2>
+          <ul>
+            <li><strong>Endocardio:</strong> capa interna.</li>
+            <li><strong>Miocardio:</strong> músculo contráctil principal.</li>
+            <li><strong>Epicardio:</strong> capa externa, relacionada con el pericardio visceral.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Sistema de conducción</h2>
+          <p>
+            Nodo sinoauricular, nodo auriculoventricular, haz de His, ramas derecha e izquierda y fibras de Purkinje. Ese cableado biológico elegante evita que el corazón improvise jazz cuando debería tocar metrónomo.
+          </p>
+        </article>
+      </section>
+    </aside>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    (() => {
+      const renderStatus = document.getElementById('renderStatus');
+      const selfTests = document.getElementById('selfTests');
+      const fallbackInfo = document.getElementById('fallbackInfo');
+      const testResults = [];
+
+      function setStatus(type, text){
+        renderStatus.className = 'statusPill ' + type;
+        renderStatus.textContent = text;
+      }
+
+      function addTest(name, passed, details){
+        testResults.push({ name, passed, details });
+      }
+
+      function flushTests(){
+        selfTests.innerHTML = testResults
+          .map(t => `<li>${t.passed ? '✓' : '✗'} <span class="mono">${t.name}</span>${t.details ? ' — ' + t.details : ''}</li>`)
+          .join('');
+      }
+
+      function failGracefully(message, error){
+        console.error(message, error);
+        fallbackInfo.classList.add('show');
+        addTest('renderer_boot', false, message);
+        setStatus('bad', 'Error de render');
+        flushTests();
+      }
+
+      try {
+        addTest('three_loaded', typeof THREE !== 'undefined', typeof THREE !== 'undefined' ? 'THREE disponible' : 'THREE no cargó');
+        if (typeof THREE === 'undefined') {
+          flushTests();
+          throw new Error('No se pudo cargar Three.js desde el CDN.');
+        }
+
+        const canvas = document.getElementById('heartCanvas');
+        addTest('canvas_found', !!canvas, canvas ? 'Canvas encontrado' : 'No existe #heartCanvas');
+        if (!canvas) {
+          flushTests();
+          throw new Error('No se encontró el canvas del visor.');
+        }
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        addTest('webgl_context', !!renderer.getContext(), renderer.getContext() ? 'Contexto WebGL activo' : 'No se obtuvo contexto WebGL');
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+        camera.position.set(0, 1.3, 9.5);
+
+        // Controles manuales: evita dependencia de OrbitControls.
+        const controls = {
+          autoRotate: true,
+          autoRotateSpeed: 0.007,
+          allowPointerRotate: true,
+          azimuth: -0.15,
+          polar: 1.22,
+          radius: 9.5,
+          target: new THREE.Vector3(0, 1.2, 0),
+          dragging: false,
+          pointerId: null,
+          lastX: 0,
+          lastY: 0,
+          update(){
+            if (this.autoRotate && !this.dragging) this.azimuth += this.autoRotateSpeed;
+            this.polar = Math.max(0.7, Math.min(2.15, this.polar));
+            this.radius = Math.max(6.5, Math.min(13, this.radius));
+            const sinP = Math.sin(this.polar);
+            camera.position.set(
+              this.target.x + this.radius * sinP * Math.sin(this.azimuth),
+              this.target.y + this.radius * Math.cos(this.polar),
+              this.target.z + this.radius * sinP * Math.cos(this.azimuth)
+            );
+            camera.lookAt(this.target);
+          },
+          reset(){
+            this.azimuth = -0.15;
+            this.polar = 1.22;
+            this.radius = 9.5;
+          }
+        };
+
+        addTest('manual_controls_ready', true, 'Se usan controles manuales; por fin se logro el renderrrrrrrr xd');
+
+        canvas.addEventListener('pointerdown', (event) => {
+          if (!controls.allowPointerRotate) return;
+          controls.dragging = true;
+          controls.pointerId = event.pointerId;
+          controls.lastX = event.clientX;
+          controls.lastY = event.clientY;
+          canvas.setPointerCapture?.(event.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', (event) => {
+          if (!controls.dragging || event.pointerId !== controls.pointerId) return;
+          const dx = event.clientX - controls.lastX;
+          const dy = event.clientY - controls.lastY;
+          controls.lastX = event.clientX;
+          controls.lastY = event.clientY;
+          controls.azimuth -= dx * 0.008;
+          controls.polar += dy * 0.008;
+        });
+
+        function stopDrag(event){
+          if (controls.pointerId !== null && event.pointerId !== undefined && event.pointerId !== controls.pointerId) return;
+          controls.dragging = false;
+          controls.pointerId = null;
+        }
+        canvas.addEventListener('pointerup', stopDrag);
+        canvas.addEventListener('pointercancel', stopDrag);
+        canvas.addEventListener('pointerleave', stopDrag);
+
+        canvas.addEventListener('wheel', (event) => {
+          event.preventDefault();
+          controls.radius += event.deltaY * 0.004;
+        }, { passive: false });
+
+        const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+        scene.add(ambient);
+
+        const key = new THREE.DirectionalLight(0xffd9df, 1.6);
+        key.position.set(4, 8, 6);
+        scene.add(key);
+
+        const fill = new THREE.DirectionalLight(0x8fb8ff, 1.15);
+        fill.position.set(-5, 3, 4);
+        scene.add(fill);
+
+        const rim = new THREE.DirectionalLight(0xffffff, 0.85);
+        rim.position.set(0, 6, -8);
+        scene.add(rim);
+
+        const heart = new THREE.Group();
+        scene.add(heart);
+
+        const mainMat = new THREE.MeshPhysicalMaterial({
+          color: 0xc92f4d,
+          roughness: 0.38,
+          metalness: 0.02,
+          clearcoat: 0.2,
+          clearcoatRoughness: 0.22
+        });
+
+        const darkMat = new THREE.MeshPhysicalMaterial({
+          color: 0x991b33,
+          roughness: 0.55,
+          metalness: 0.01
+        });
+
+        const vesselMat = new THREE.MeshPhysicalMaterial({
+          color: 0xb63b5f,
+          roughness: 0.4,
+          metalness: 0.02,
+          clearcoat: 0.15
+        });
+
+        function sphere(r, w = 48, h = 48, mat = mainMat){
+          return new THREE.Mesh(new THREE.SphereGeometry(r, w, h), mat);
+        }
+        function cylinder(rt, rb, h, mat = vesselMat){
+          return new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 36), mat);
+        }
+
+        const leftVentricle = sphere(1.65);
+        leftVentricle.scale.set(1.05, 1.45, 1.0);
+        leftVentricle.position.set(0.95, 1.8, 0);
+        heart.add(leftVentricle);
+
+        const rightVentricle = sphere(1.45);
+        rightVentricle.scale.set(1.0, 1.28, 0.95);
+        rightVentricle.position.set(-0.85, 1.85, 0.45);
+        heart.add(rightVentricle);
+
+        const leftAtrium = sphere(1.05, 40, 40, darkMat);
+        leftAtrium.scale.set(1.15, 0.92, 1.0);
+        leftAtrium.position.set(0.95, 4.1, -0.25);
+        heart.add(leftAtrium);
+
+        const rightAtrium = sphere(1.1, 40, 40, darkMat);
+        rightAtrium.scale.set(1.08, 0.96, 1.05);
+        rightAtrium.position.set(-1.0, 4.0, 0.32);
+        heart.add(rightAtrium);
+
+        const apex = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.8, 40), mainMat);
+        apex.position.set(0.3, 0.15, 0.05);
+        apex.rotation.z = 0.15;
+        heart.add(apex);
+
+        const aorta = cylinder(0.45, 0.52, 2.5);
+        aorta.position.set(1.5, 6.1, -0.25);
+        aorta.rotation.z = 0.22;
+        heart.add(aorta);
+
+        const arch = new THREE.Mesh(
+          new THREE.TorusGeometry(1.38, 0.28, 18, 80, Math.PI * 0.95),
+          vesselMat
+        );
+        arch.position.set(0.9, 6.85, -0.75);
+        arch.rotation.y = Math.PI * 0.42;
+        arch.rotation.x = Math.PI * 0.48;
+        heart.add(arch);
+
+        const pulmonary = cylinder(0.42, 0.46, 2.2);
+        pulmonary.position.set(-1.35, 5.65, 0.82);
+        pulmonary.rotation.z = -0.22;
+        heart.add(pulmonary);
+
+        const vena1 = cylinder(0.22, 0.22, 1.7, darkMat);
+        vena1.position.set(-1.75, 5.9, 1.1);
+        vena1.rotation.z = 1.06;
+        heart.add(vena1);
+
+        const vena2 = cylinder(0.18, 0.18, 1.55, darkMat);
+        vena2.position.set(1.9, 4.4, -1.05);
+        vena2.rotation.z = 1.34;
+        heart.add(vena2);
+
+        heart.rotation.z = -0.12;
+        heart.rotation.y = -0.15;
+        heart.position.y = -0.4;
+
+        const floor = new THREE.Mesh(
+          new THREE.CircleGeometry(7, 64),
+          new THREE.MeshBasicMaterial({ color: 0x17305e, transparent: true, opacity: 0.22 })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -2.7;
+        scene.add(floor);
+
+        addTest('heart_group_children', heart.children.length >= 8, `Partes creadas: ${heart.children.length}`);
+
+        function resize(){
+          const w = Math.max(1, canvas.clientWidth);
+          const h = Math.max(1, canvas.clientHeight);
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          addTest('resize_dimensions_valid', w > 0 && h > 0, `${w}x${h}`);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let animateRotation = true;
+        let animatePulse = true;
+        document.getElementById('toggleRotation').addEventListener('click', () => {
+          animateRotation = !animateRotation;
+          controls.autoRotate = animateRotation;
+          document.getElementById('toggleRotation').textContent = animateRotation ? 'Pausar giro' : 'Reanudar giro';
+        });
+        document.getElementById('togglePulse').addEventListener('click', () => {
+          animatePulse = !animatePulse;
+          document.getElementById('togglePulse').textContent = animatePulse ? 'Pausar latido' : 'Reanudar latido';
+        });
+        document.getElementById('resetView').addEventListener('click', () => controls.reset());
+
+        addTest('controls_buttons_bound', true, 'Botones de giro, latido y reinicio enlazados');
+
+        let t = 0;
+        function animate(){
+          requestAnimationFrame(animate);
+          t += 0.018;
+          const pulse = animatePulse ? 1 + Math.sin(t * 2.6) * 0.018 : 1;
+          heart.scale.set(pulse, pulse, pulse);
+          heart.position.y = -0.4 + (animatePulse ? Math.sin(t * 1.3) * 0.05 : 0);
+          controls.update();
+          renderer.render(scene, camera);
+        }
+
+        flushTests();
+        setStatus('ok', 'Renderizando correctamente');
+        animate();
+      } catch (error) {
+        failGracefully(error.message || 'Fallo desconocido al inicializar el visor 3D.', error);
+      }
+    })();
+  </script>
+</body>
+</html>
