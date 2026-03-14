@@ -48,24 +48,26 @@
     .viewerBtn{
       appearance:none;border:1px solid rgba(122,162,255,.25);cursor:pointer;
       background:rgba(10,18,38,.74);color:var(--text);padding:10px 14px;border-radius:999px;
-      font-size:13px;backdrop-filter:blur(10px)
+      font-size:13px;backdrop-filter:blur(10px);transition:.2s ease
     }
-    .viewerBtn:hover{border-color:rgba(122,162,255,.5)}
+    .viewerBtn:hover{border-color:rgba(122,162,255,.5);transform:translateY(-1px)}
     .panel{padding:28px 24px 28px 18px;overflow:auto}
-    .hero,.card,.statusCard{
+    .hero,.card,.statusCard,.galleryCard,.mediaCard{
       background:var(--card);border:1px solid rgba(122,162,255,.16);border-radius:24px;
       box-shadow:0 16px 50px rgba(0,0,0,.24);backdrop-filter:blur(10px)
     }
     .hero{padding:28px;margin-bottom:18px}
     .statusCard{padding:14px 16px;margin-bottom:16px}
+    .galleryCard{padding:18px;margin-bottom:18px}
+    .mediaCard{padding:18px;margin-bottom:18px}
     h1{font-size:clamp(28px,4vw,46px);line-height:1.02;margin:0 0 12px}
     .lead{font-size:15px;line-height:1.65;color:var(--muted);margin:0 0 18px}
     .chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
     .chip{padding:10px 14px;border-radius:999px;background:rgba(122,162,255,.08);border:1px solid rgba(122,162,255,.2);font-size:13px;color:#dce7ff}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     .card{padding:18px}
-    .card h2{font-size:16px;margin:0 0 10px}
-    .card p,.card li{font-size:14px;line-height:1.6;color:var(--muted)}
+    .card h2,.galleryCard h2,.mediaCard h2{font-size:16px;margin:0 0 10px}
+    .card p,.card li,.galleryCard p,.mediaCard p{font-size:14px;line-height:1.6;color:var(--muted)}
     ul{margin:0;padding-left:18px}
     .metricWrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
     .metric{padding:14px;border-radius:18px;background:rgba(7,18,38,.42);border:1px solid rgba(122,162,255,.12)}
@@ -83,6 +85,171 @@
     .statusList li{margin-bottom:4px}
     .fallbackInfo{display:none}
     .fallbackInfo.show{display:block}
+
+    .sliderShell{position:relative;margin-top:14px}
+    .sliderViewport{
+      position:relative;
+      overflow:hidden;
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(9,17,36,.9), rgba(15,30,58,.8));
+      border:1px solid rgba(122,162,255,.14);
+      aspect-ratio: 16 / 10;
+      min-height:280px;
+    }
+    .sliderTrack{
+      display:flex;
+      height:100%;
+      transition:transform .45s cubic-bezier(.22,.61,.36,1);
+      will-change:transform;
+    }
+    .slide{
+      min-width:100%;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background:linear-gradient(145deg, rgba(19,35,72,.95), rgba(7,17,36,.92));
+    }
+    .slide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    .slideCaption{
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(8,16,34,.64);
+      border:1px solid rgba(122,162,255,.16);
+      backdrop-filter:blur(10px);
+    }
+    .slideCaption strong{font-size:14px;display:block}
+    .slideCaption span{font-size:12px;color:var(--muted)}
+    .slideCount{
+      flex:0 0 auto;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      color:#dbe7ff;
+      border:1px solid rgba(122,162,255,.18);
+      background:rgba(122,162,255,.08);
+    }
+    .sliderBtn{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:3;
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      border:1px solid rgba(122,162,255,.2);
+      background:rgba(8,16,34,.76);
+      color:var(--text);
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      backdrop-filter:blur(10px);
+      transition:.2s ease;
+    }
+    .sliderBtn:hover{transform:translateY(-50%) scale(1.04);border-color:rgba(122,162,255,.48)}
+    .sliderBtn.prev{left:12px}
+    .sliderBtn.next{right:12px}
+    .sliderBtn svg{width:18px;height:18px}
+    .sliderMeta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    .sliderDots{display:flex;gap:8px;flex-wrap:wrap}
+    .dotBtn{
+      width:11px;height:11px;border-radius:50%;border:none;cursor:pointer;
+      background:rgba(122,162,255,.24);padding:0;transition:.2s ease
+    }
+    .dotBtn.active{background:#9cbcff;transform:scale(1.2)}
+    .thumbStrip{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+    .thumb{
+      position:relative;
+      border:none;
+      border-radius:16px;
+      overflow:hidden;
+      padding:0;
+      background:rgba(122,162,255,.06);
+      border:1px solid rgba(122,162,255,.14);
+      cursor:pointer;
+      aspect-ratio: 1 / 1;
+      transition:.2s ease;
+    }
+    .thumb:hover{transform:translateY(-1px);border-color:rgba(122,162,255,.4)}
+    .thumb.active{outline:2px solid rgba(156,188,255,.9);border-color:rgba(156,188,255,.9)}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .sliderHelp{font-size:12px;color:#8ea4d7}
+    .videoGrid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      margin-top:14px;
+    }
+    .videoItem{
+      background:rgba(7,18,38,.42);
+      border:1px solid rgba(122,162,255,.14);
+      border-radius:20px;
+      overflow:hidden;
+      min-width:0;
+    }
+    .videoFrame{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/10;
+      background:linear-gradient(145deg, rgba(19,35,72,.95), rgba(7,17,36,.92));
+    }
+    .videoFrame video{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      background:#050c19;
+    }
+    .videoBody{padding:14px}
+    .videoBody strong{display:block;font-size:14px;margin-bottom:4px}
+    .videoBody span{font-size:12px;color:var(--muted)}
+    .videoFallback{
+      display:grid;
+      place-items:center;
+      height:100%;
+      padding:18px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+    .placeholderLabel{
+      position:absolute;inset:auto 10px 10px 10px;
+      padding:7px 9px;border-radius:12px;font-size:11px;
+      background:rgba(6,12,26,.72);color:#d7e5ff;border:1px solid rgba(122,162,255,.14)
+    }
+
+    @media (max-width: 1180px){
+      .thumbStrip{grid-template-columns:repeat(5,minmax(0,1fr))}
+    }
     @media (max-width: 980px){
       body{overflow:auto}
       .app{grid-template-columns:1fr;height:auto}
@@ -90,6 +257,23 @@
       .panel{padding:16px}
       .grid{grid-template-columns:1fr}
       .metricWrap{grid-template-columns:1fr}
+      .sliderViewport{min-height:240px}
+    }
+    @media (max-width: 900px){
+      .videoGrid{grid-template-columns:1fr}
+    }
+    @media (max-width: 680px){
+      .viewerHud{left:14px;right:14px;bottom:14px}
+      .badge{left:14px;top:14px;font-size:12px;padding:8px 12px}
+      .hero{padding:20px}
+      .galleryCard,.card,.statusCard,.mediaCard{padding:16px}
+      .sliderBtn{width:40px;height:40px}
+      .slideCaption{left:10px;right:10px;bottom:10px;padding:10px 12px}
+      .thumbStrip{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media (max-width: 420px){
+      .thumbStrip{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .sliderMeta{align-items:flex-start}
     }
   </style>
 </head>
@@ -98,7 +282,7 @@
     <section class="viewer">
       <canvas id="heartCanvas"></canvas>
       <div class="overlay"></div>
-      <div class="badge">Modelo corazon hcda.</div>
+      <div class="badge">Modelo 3D estilizado del corazón</div>
       <div class="viewerHud">
         <button id="toggleRotation" class="viewerBtn">Pausar giro</button>
         <button id="togglePulse" class="viewerBtn">Pausar latido</button>
@@ -148,9 +332,41 @@
           </div>
         </div>
 
-        <div class="footerNote">
-          Esto fue un caos completamente xd. pero ey, se logró algo.
+        
+      </section>
+
+      <section class="galleryCard">
+        <div class="miniTitle">Galería de nuestra maqueta</div>
+        <h2>Nuestra Galeria</h2>
+    
+
+        <div class="sliderShell" id="maquetaSlider">
+          <button class="sliderBtn prev" id="prevSlide" aria-label="Imagen anterior" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+
+          <div class="sliderViewport" aria-live="polite">
+            <div class="sliderTrack" id="sliderTrack"></div>
+          </div>
+
+          <button class="sliderBtn next" id="nextSlide" aria-label="Siguiente imagen" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
         </div>
+
+        <div class="sliderMeta">
+          <div class="sliderDots" id="sliderDots" aria-label="Indicadores del slider"></div>
+        </div>
+
+        <div class="thumbStrip" id="thumbStrip"></div>
+      </section>
+
+      <section class="mediaCard">
+        <div class="miniTitle">Video de nuestra maqueta</div>
+        <h2>Sección video.</h2>
+        <p>
+        </p>
+        <video src="images/1.mp4" autoplay loop controls playsinline style="width:100%;max-height:420px;display:block;border-radius:18px;object-fit:cover;transform:rotate(-90deg);margin-top:20px;"></video>
       </section>
 
       <section class="grid">
@@ -200,9 +416,63 @@
         <article class="card">
           <h2>Sistema de conducción</h2>
           <p>
-            Nodo sinoauricular, nodo auriculoventricular, haz de His, ramas derecha e izquierda y fibras de Purkinje.
+            Nodo sinoauricular, nodo auriculoventricular, haz de His, ramas derecha e izquierda y fibras de Purkinje. Ese cableado biológico elegante evita que el corazón improvise jazz cuando debería tocar metrónomo.
           </p>
         </article>
+      </section>
+
+      <section class="card" style="margin-bottom:18px;">
+        <div class="miniTitle">Estructuras anatómicas</div>
+        <h2>Lista enumerada de la maqueta</h2>
+        
+        <ol style="margin:14px 0 0; padding-left:22px; color:var(--text); line-height:1.85; font-size:14px;">
+          <li>Orejuela</li>
+          <li>Surco terminal del corazon</li>
+          <li>Cresta terminal</li>
+          <li>Seno de las venas cavas</li>
+          <li>Musculos pectineos</li>
+          <li>Orificio del seno coronario</li>
+          <li>Valvula de Tebesio</li>
+          <li>Orificio de la vena cava inferior</li>
+          <li>Valvula de Eustaquio</li>
+          <li>Tabique interatrial</li>
+          <li>Fosa oval</li>
+          <li>Limbo de la fosa oval</li>
+          <li>Tendon de Todaro</li>
+          <li>Triangulo de Koch</li>
+          <li>Ventriculo derecho</li>
+          <li>Cono arterioso o infundibulo</li>
+          <li>Trabeculas carnosas</li>
+          <li>Cresta supraventricular</li>
+          <li>Orificio auriculoventricular y valvula tricuspide</li>
+          <li>Musculos papilares</li>
+          <li>Tabique interventricular</li>
+          <li>Banda moderadora</li>
+          <li>Auricula izquierda</li>
+          <li>Orejuela</li>
+          <li>Tabique interatrial</li>
+          <li>Valvula del foramen oval</li>
+          <li>Ventriculo izquierdo</li>
+          <li>Trabeculas carnosas</li>
+          <li>Orificio auriculoventricular y valvula mitral</li>
+          <li>Vestibulo aortico</li>
+          <li>Orificio aortico</li>
+          <li>Musculos papilares</li>
+          <li>Tabique interventricular</li>
+          <li>Vasos sanguineos relacionados al corazon</li>
+          <li>Aorta ascendente</li>
+          <li>Valvula aortica</li>
+          <li>Cayado aortico</li>
+          <li>Ramas del cayado aortico</li>
+          <li>Aorta descendente</li>
+          <li>Tronco pulmonar</li>
+          <li>Valvulas del tronco pulmonar</li>
+          <li>Arteria pulmonar derecha</li>
+          <li>Arteria pulmonar izquierda</li>
+          <li>Venas pulmonares</li>
+          <li>Arterias coronarias</li>
+          <li>Venas coronarias</li>
+        </ol>
       </section>
     </aside>
   </div>
@@ -262,7 +532,6 @@
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
         camera.position.set(0, 1.3, 9.5);
 
-        // Controles manuales: evita dependencia de OrbitControls.
         const controls = {
           autoRotate: true,
           autoRotateSpeed: 0.007,
@@ -294,7 +563,7 @@
           }
         };
 
-        addTest('manual_controls_ready', true, 'Se usan controles manuales; por fin se logro el renderrrrrrrr xd');
+        addTest('manual_controls_ready', true, 'Se usan controles manuales; por fin se logro el render');
 
         canvas.addEventListener('pointerdown', (event) => {
           if (!controls.allowPointerRotate) return;
@@ -487,7 +756,189 @@
         failGracefully(error.message || 'Fallo desconocido al inicializar el visor 3D.', error);
       }
     })();
+
+    (() => {
+      const images = [
+        { src: 'images/7.jpeg', alt: 'Nuestro equipo.', title: 'Nuestro equipo:', note: 'DAVID ALESSANDRO HERNANDEZ CERVANTES, ESMERALDA DE LUNA GONZALES, GEOVANNY CABRAL VELASCO, MARIANA GUTIERREZ GONZALES, ANDREA ALVARADO GUZMAN.' },
+        { src: 'images/3.jpeg', alt: ',', title: 'Proceso de pintado', note: 'Mariana pintando.' },
+        { src: 'images/2.jpeg', alt: '.', title: 'Detallado', note: 'Esmeralda detallando.' },
+        { src: 'images/4.jpeg', alt: '.', title: 'Moldeo', note: 'Alessandro moldeando.' },
+        { src: 'images/8.jpeg', alt: '.a', title: 'Primera vista', note: 'Detallado 70%' },
+        { src: 'images/5.jpeg', alt: '.', title: 'Moldeo', note: 'Geovanny y Esmeralda moldeando.' },
+        { src: 'images/6.jpeg', alt: '.', title: 'Corazon', note: 'Corazon vista posterior.' },
+      ];
+
+      const sliderTrack = document.getElementById('sliderTrack');
+      const sliderDots = document.getElementById('sliderDots');
+      const thumbStrip = document.getElementById('thumbStrip');
+      const prevBtn = document.getElementById('prevSlide');
+      const nextBtn = document.getElementById('nextSlide');
+      const sliderRoot = document.getElementById('maquetaSlider');
+
+      if (!sliderTrack || !sliderDots || !thumbStrip || !prevBtn || !nextBtn || !sliderRoot) return;
+
+      let currentIndex = 0;
+      let autoplay = true;
+      let autoplayTimer = null;
+      let touchStartX = 0;
+      let touchDeltaX = 0;
+
+      function createSlide(item, index){
+        const slide = document.createElement('article');
+        slide.className = 'slide';
+        slide.setAttribute('aria-label', `Imagen ${index + 1} de ${images.length}`);
+        slide.innerHTML = `
+          <img src="${item.src}" alt="${item.alt}" loading="lazy">
+          <div class="slideCaption">
+            <div>
+              <strong>${item.title}</strong>
+              <span>${item.note}</span>
+            </div>
+            <div class="slideCount">${index + 1} / ${images.length}</div>
+          </div>
+        `;
+
+        const img = slide.querySelector('img');
+        img.addEventListener('error', () => {
+          slide.innerHTML = `
+            <div style="width:100%;height:100%;display:grid;place-items:center;padding:24px;text-align:center;position:relative;">
+              <div>
+                <div style="font-size:22px;font-weight:800;margin-bottom:8px;">${item.title}</div>
+                <div style="color:var(--muted);font-size:14px;max-width:420px;line-height:1.6;">No se encontró la imagen <span class="mono">${item.src}</span>. Reemplaza esta ruta por tu foto real.</div>
+              </div>
+              <div class="placeholderLabel">${index + 1} / ${images.length}</div>
+            </div>
+          `;
+        });
+
+        return slide;
+      }
+
+      function createDot(index){
+        const dot = document.createElement('button');
+        dot.className = 'dotBtn';
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `Ir a la imagen ${index + 1}`);
+        dot.addEventListener('click', () => goToSlide(index));
+        return dot;
+      }
+
+      function createThumb(item, index){
+        const thumb = document.createElement('button');
+        thumb.className = 'thumb';
+        thumb.type = 'button';
+        thumb.setAttribute('aria-label', `Miniatura ${index + 1}`);
+        thumb.innerHTML = `<img src="${item.src}" alt="Miniatura ${index + 1}">`;
+        const img = thumb.querySelector('img');
+        img.addEventListener('error', () => {
+          thumb.innerHTML = `<div style="width:100%;height:100%;display:grid;place-items:center;padding:8px;font-size:11px;color:var(--muted);">${index + 1}</div>`;
+        });
+        thumb.addEventListener('click', () => goToSlide(index));
+        return thumb;
+      }
+
+      images.forEach((item, index) => {
+        sliderTrack.appendChild(createSlide(item, index));
+        sliderDots.appendChild(createDot(index));
+        thumbStrip.appendChild(createThumb(item, index));
+      });
+
+      const dots = Array.from(sliderDots.children);
+      const thumbs = Array.from(thumbStrip.children);
+
+      function updateSlider(){
+        sliderTrack.style.transform = `translateX(-${currentIndex * 100}%)`;
+        dots.forEach((dot, index) => dot.classList.toggle('active', index === currentIndex));
+        thumbs.forEach((thumb, index) => thumb.classList.toggle('active', index === currentIndex));
+      }
+
+      function goToSlide(index){
+        currentIndex = (index + images.length) % images.length;
+        updateSlider();
+        restartAutoplay();
+      }
+
+      function nextSlide(){
+        currentIndex = (currentIndex + 1) % images.length;
+        updateSlider();
+      }
+
+      function prevSlide(){
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        updateSlider();
+      }
+
+      function startAutoplay(){
+        if (!autoplay) return;
+        stopAutoplay();
+        autoplayTimer = window.setInterval(nextSlide, 4200);
+      }
+
+      function stopAutoplay(){
+        if (autoplayTimer) {
+          clearInterval(autoplayTimer);
+          autoplayTimer = null;
+        }
+      }
+
+      function restartAutoplay(){
+        stopAutoplay();
+        startAutoplay();
+      }
+
+      prevBtn.addEventListener('click', () => {
+        prevSlide();
+        restartAutoplay();
+      });
+
+      nextBtn.addEventListener('click', () => {
+        nextSlide();
+        restartAutoplay();
+      });
+
+      sliderRoot.addEventListener('mouseenter', stopAutoplay);
+      sliderRoot.addEventListener('mouseleave', startAutoplay);
+      sliderRoot.addEventListener('focusin', stopAutoplay);
+      sliderRoot.addEventListener('focusout', startAutoplay);
+
+      document.addEventListener('keydown', (event) => {
+        const active = document.activeElement;
+        const insideSlider = sliderRoot.contains(active);
+        if (!insideSlider) return;
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          nextSlide();
+          restartAutoplay();
+        }
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          prevSlide();
+          restartAutoplay();
+        }
+      });
+
+      sliderRoot.addEventListener('touchstart', (event) => {
+        touchStartX = event.changedTouches[0].clientX;
+        touchDeltaX = 0;
+      }, { passive: true });
+
+      sliderRoot.addEventListener('touchmove', (event) => {
+        touchDeltaX = event.changedTouches[0].clientX - touchStartX;
+      }, { passive: true });
+
+      sliderRoot.addEventListener('touchend', () => {
+        if (Math.abs(touchDeltaX) > 40) {
+          if (touchDeltaX < 0) nextSlide();
+          else prevSlide();
+          restartAutoplay();
+        }
+        touchStartX = 0;
+        touchDeltaX = 0;
+      });
+
+      updateSlider();
+      startAutoplay();
+    })();
   </script>
 </body>
 </html>
-
